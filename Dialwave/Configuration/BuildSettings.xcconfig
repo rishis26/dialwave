@@ -1,0 +1,15 @@
+// Build settings configuration for DialWave
+// Applied to the target to ensure the correct plist and entitlements are used.
+
+INFOPLIST_FILE = Dialwave/Configuration/Info.plist
+CODE_SIGN_ENTITLEMENTS = Dialwave/Configuration/Dialwave.entitlements
+
+// Force macOS only
+SUPPORTED_PLATFORMS = macosx
+MACOSX_DEPLOYMENT_TARGET = 13.0
+TARGETED_DEVICE_FAMILY = 1 // Mac
+
+// Modern Swift Settings
+SWIFT_VERSION = 5.0
+SWIFT_STRICT_CONCURRENCY = complete
+ENABLE_USER_SCRIPT_SANDBOXING = YES
