@@ -1,0 +1,233 @@
+# ────────────────────────────────────────
+# DialWave .gitignore
+# Mac (Swift/Xcode) + Android (Kotlin)
+# ────────────────────────────────────────
+
+
+# ══════════════════════════════════════
+# XCODE
+# ══════════════════════════════════════
+
+# User-specific Xcode settings
+*.xcuserstate
+xcuserdata/
+*.xcuserdatad/
+
+# Xcode workspace user data
+*.xcworkspace/xcuserdata/
+
+# Xcode build output
+build/
+DerivedData/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+
+# Xcode schemes (keep shared schemes, ignore personal)
+!*.xcscheme
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+Package.resolved
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Instruments
+*.trace
+
+# Crashlytics
+com_crashlytics_export_strings.xml
+crashlytics-build.properties
+crashlytics.properties
+
+
+# ══════════════════════════════════════
+# MACOS SYSTEM
+# ══════════════════════════════════════
+
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.AppleDouble
+.LSOverride
+Icon?
+*.AppleDouble
+
+# Thumbnails
+Thumbs.db
+
+# Desktop services store
+.DocumentRevisions-V100
+.fseventsd
+.TemporaryItems
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+
+# ══════════════════════════════════════
+# ANDROID / GRADLE
+# ══════════════════════════════════════
+
+# Gradle build output
+android/.gradle/
+android/build/
+android/app/build/
+android/**/build/
+
+# Local config (contains SDK path, machine-specific)
+android/local.properties
+
+# Android Studio user files
+android/.idea/
+android/**/.idea/
+*.iml
+*.iws
+*.ipr
+
+# Android keystore — NEVER commit signing keys
+android/app/*.jks
+android/app/*.keystore
+android/keystore/
+*.jks
+*.keystore
+release.properties
+keystore.properties
+
+# APK and AAB build artifacts
+android/**/*.apk
+android/**/*.aab
+android/**/*.ap_
+
+# ProGuard mapping (regenerated each build)
+android/app/mapping.txt
+android/**/mapping/
+
+# Android Studio navigation editor
+android/app/src/main/res/navigation/*.xml.bak
+
+# Lint output
+android/app/lint-results*.xml
+android/app/lint-results*.html
+
+# Test results
+android/app/build/reports/
+android/app/build/test-results/
+
+
+# ══════════════════════════════════════
+# SECRETS & KEYS — CRITICAL
+# ══════════════════════════════════════
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.*
+
+# Any file with secrets in the name
+*secret*
+*secrets*
+*password*
+*credentials*
+*api_key*
+*apikey*
+*private_key*
+
+# Configuration with real values
+BuildSettings.xcconfig.local
+Config.local.swift
+local.xcconfig
+
+
+# ══════════════════════════════════════
+# DIALWAVE SPECIFIC
+# ══════════════════════════════════════
+
+# Local SQLite database
+*.db
+*.sqlite
+*.sqlite3
+
+# Audio test files
+Dialwave/Resources/Sounds/*.wav
+Dialwave/Resources/Sounds/*.mp3
+!Dialwave/Resources/Sounds/.gitkeep
+
+# Exported call logs
+*.csv
+
+# Crash logs
+*.crash
+
+# Provisioning profiles (machine specific)
+*.mobileprovision
+*.provisionprofile
+
+
+# ══════════════════════════════════════
+# EDITORS & TOOLS
+# ══════════════════════════════════════
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Cursor / Antigravity IDE
+.cursor/
+.antigravity/
+
+# JetBrains (if using AppCode or Fleet)
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Vim/Emacs
+*.swp
+*.swo
+*~
+\#*\#
+.\#*
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+
+# ══════════════════════════════════════
+# MISC
+# ══════════════════════════════════════
+
+# Node (if any tooling is added later)
+node_modules/
+npm-debug.log*
+
+# Python (if any scripts are added)
+__pycache__/
+*.pyc
+*.pyo
+
+# Logs
+*.log
+logs/
+
+# OS temp files
+*.tmp
+*.temp
+tmp/
+temp/
