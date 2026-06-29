@@ -1,120 +1,136 @@
-# 🌊 DialWave
+# DialWave
 
-[![Project Version](https://img.shields.io/badge/version-0.0.1--planning-blue.svg)](#)
-[![Status](https://img.shields.io/badge/status-planning__phase-orange.svg)](#)
+> **Native macOS companion for Android using Bluetooth-first communication.**  
+> DialWave runs silently in your macOS menubar, connects to your Android phone via Bluetooth RFCOMM, and upgrades to local Wi-Fi sockets to mirror call states, route audio, sync messages, and handle contacts.
 
-DialWave is a modern integration suite designed to bridge macOS and Android devices seamlessly. It brings call control, real-time audio routing (bypassing macOS SCO restrictions), contact synchronization, call logs, and SMS directly to the macOS menubar.
-
----
-
-## 🏗️ Architecture & Component Status
-
-DialWave consists of two primary applications communicating bidirectionally:
-
-| Component | Language | Framework | Status | Notes |
-| :--- | :--- | :--- | :--- | :--- |
-| **macOS App** | Swift 6.2.3 | SwiftUI + AppKit | In Progress | Menubar-only daemon, no Dock icon. |
-| **Android App** | Kotlin | Android SDK | Not Started | Background service + configuration UI. |
+> 🔒 **100% Offline. Nothing leaves your local network.** No cloud, no external servers, no logging endpoints, no accounts. Your synced contacts, SMS threads, and call audio streams remain entirely on your own local devices.
 
 ---
 
-## ⚡ Feature Map
+## About DialWave
 
-### 📞 Call Control
-*   [ ] **Incoming Call Popup:** Real-time HUD showing caller details on macOS.
-*   [ ] **Answer/Reject:** Control call state directly from the popup.
-*   [ ] **Dial from Mac:** Initiate outgoing calls by entering a number or clicking a contact.
-*   [ ] **Hang Up:** Terminate active calls from the Mac.
+### What it is
 
-### 👤 Contact & History Sync
-*   [ ] **Samsung/Android Contacts Sync:** Fetch and store contacts locally in SQLite on macOS.
-*   [ ] **Search:** Quick-search contact list.
-*   [ ] **Click-to-Call:** Seamless transition from contact card to active call.
-*   [ ] **Call Log History:** View missed, incoming, and outgoing history with callback buttons.
+DialWave is a **local-first communication integration suite** between Android and macOS. It acts as an integration bridge so you can interact with calls and SMS on your Mac while leaving your phone in your pocket. The system operates with sub-second call alerts, rapid dial capability, and near-zero latency audio routing.
 
-### 💬 SMS Integration
-*   [ ] **Real-time SMS Popups:** Receive instant notifications of new texts.
-*   [ ] **Threaded Conversations:** View conversation history in the menubar popover.
-*   [ ] **Direct Reply:** Compose and send SMS responses from the Mac.
+### How it works
 
-### 🛜 Connection & System
-*   [ ] **Bluetooth RFCOMM Handshake:** Auto-discovery and initial pairing.
-*   [ ] **WiFi Socket Upgrade:** Automatic upgrade to TCP/UDP sockets for primary communication.
-*   [ ] **Menubar Daemon:** Silent running with status indicator in the Mac status bar.
-*   [ ] **Launch at Startup:** Automatically run the macOS agent on boot.
+1.  **Initial Discovery & Handshake:**
+    On startup, the macOS menubar app begins scanning for the companion phone using `CoreBluetooth`. An RFCOMM channel is opened using a shared custom UUID service record.
+2.  **Wi-Fi Upgrade:**
+    Because macOS Bluetooth stacks are historically unstable for high-throughput, continuous data flow, DialWave uses RFCOMM only for the initial handshake and exchange of local IP addresses. Once both nodes are verified, the connection upgrades to a local TCP/UDP Wi-Fi socket.
+3.  **Bypassing the macOS SCO Audio Block:**
+
+    > [!IMPORTANT]
+    > macOS completely blocks third-party applications from directly opening and routing audio via Bluetooth SCO (HFP voice profile).
+
+    DialWave solves this limitation by implementing a direct **Network Audio Bridge**:
+    - When a call goes active, the Android app captures voice streams using `AudioRecord` (16kHz mono 16-bit PCM).
+    - This audio payload is packetized and streamed over a local **UDP Socket** to the Mac.
+    - The Mac decodes and plays the PCM stream through the system output devices using `AVFoundation`.
+    - Simultaneously, the Mac captures microphone input, packages it, and streams it back to Android over UDP, where it is injected into the call path using `AudioTrack`.
 
 ---
 
-## 🗺️ Implementation Roadmap
+## Architecture
 
-```mermaid
-graph TD
-    P1[Phase 1: Foundation<br>Establish RFCOMM + Test Messages] --> P2[Phase 2: Call Control<br>State Monitoring & Answer/Reject]
-    P2 --> P3[Phase 3: Audio Bridge<br>AudioRecord/Track via UDP]
-    P3 --> P4[Phase 4: Contacts & Logs<br>Sync Contacts & Call History]
-    P4 --> P5[Phase 5: SMS Integration<br>Read, Notify & Send SMS]
-    P5 --> P6[Phase 6: Polish<br>WiFi Failbacks & System Launchers]
+DialWave operates as a multi-threaded, asynchronous service broker on both platforms:
+
+### macOS Application Process Thread Model
+
+```
+Process: DialWave macOS
+│
+├── Main Thread — RunLoop & View Updates
+│   ├── MenuBar View updates, popup window lifecycle, preference tabs
+│   └── ServiceRegistry coordinator
+│
+├── Bluetooth / Network Threads
+│   ├── CBCentralManager discovery queues
+│   ├── TCP Control socket listener (Incoming events/JSON payloads)
+│   └── UDP Audio stream client (Real-time PCM reader/writer)
+│
+└── Storage & Core Services Thread
+    └── SQLite database writes, contact queries, and message thread caches
 ```
 
-### 📍 Phase 1: Foundation (Current Phase)
-*Goal: macOS and Android bidirectional test messaging over Bluetooth RFCOMM.*
-1. Build minimal Swift menubar daemon skeleton.
-2. Build minimal Kotlin Android app.
-3. Establish Bluetooth RFCOMM socket connection between devices.
-4. Send verification ping/pong messages Mac ⇄ Android.
+---
 
-### 📍 Phase 2: Call Control
-*Goal: Detect, answer, reject, and dial calls from Mac.*
-1. Listen for `PHONE_STATE` changes on Android.
-2. Push JSON-serialized state events to macOS.
-3. Render HUD popup on macOS for incoming calls.
-4. Issue `ANSWER`, `REJECT`, or `DIAL` command payloads back to Android.
+## File Structure
 
-### 📍 Phase 3: Audio Bridge
-*Goal: Stream call audio to/from macOS mic & speakers over local network.*
-1. Capture raw PCM phone call audio on Android using `AudioRecord`.
-2. Stream raw audio over UDP socket to Mac (bypassing SCO limits).
-3. Play incoming stream on Mac using `AVFoundation`.
-4. Capture macOS microphone input and stream UDP packets back to Android.
-5. Inject mic stream into call audio path via `AudioTrack`.
-
-### 📍 Phase 4: Contacts & Call Logs
-*Goal: Sync phone directory and call histories to macOS.*
-1. Read Android `ContactsContract` and `CallLog.Calls`.
-2. Bulk-transfer JSON payloads to macOS SQLite local storage.
-3. Build search-friendly SwiftUI Contacts list and Call Log views.
-
-### 📍 Phase 5: SMS Integration
-*Goal: Full SMS reading and reply capability from macOS menubar.*
-1. Android background listener monitors incoming SMS.
-2. Forward payload to macOS popover interface.
-3. Transmit reply strings back to Android for dispatch via `SmsManager`.
-
-### 📍 Phase 6: Polish
-*Goal: Production-ready stability, packaging, and UI polish.*
-1. Implement reconnect logic, WiFi-to-Bluetooth fallbacks, and socket recovery.
-2. Package macOS App as a signed `.app`.
-3. Package Android application as a release-ready `.apk`.
+```text
+Dialwave/
+├── App/                          # App Entry Point & Delegation
+│   ├── AppDelegate.swift         # AppKit integration, background daemon agent
+│   ├── AppEnvironment.swift      # Context locator & dependency injector
+│   └── DialwaveApp.swift         # SwiftUI lifecycle start
+├── UI/                           # User Interfaces
+│   ├── Screens/                  # Multi-tab view layouts
+│   │   ├── Settings/             # UI for preferences and limits
+│   │   ├── CallPopup/            # Incoming call HUD popup
+│   │   └── Contacts/             # Sync list view with contact search
+│   ├── Menubar/                  # Status bar components
+│   ├── Popovers/                 # Quick actions panel
+│   ├── Windows/                  # Standalone floating window management
+│   └── Components/               # Reusable views (buttons, wave visualizers)
+├── Services/                     # Core Business Logic
+│   ├── Base/                     # Coordinator registry
+│   ├── Call/                     # Call monitoring & audio triggers
+│   ├── SMS/                      # Message thread indexers
+│   ├── Contacts/                 # Contact fetcher & sync managers
+│   └── Notifications/            # System banners and notification relays
+├── Bluetooth/                    # Device Interfacing
+│   ├── Core/                     # CBCentral wrappers
+│   ├── Connection/               # Socket coordinators
+│   ├── Discovery/                # Peer scanning routines
+│   └── Transport/                # RFCOMM & Wi-Fi stream sockets
+├── Protocol/                     # Cross-Platform Communication Protocol
+│   ├── Base/                     # Message frames & envelope wrappers
+│   ├── Commands/                 # Request models (Dial, SMS reply)
+│   └── Events/                   # Notification models (Incoming call, text)
+├── Storage/                      # Persistence Controllers
+│   ├── Database/                 # SQLite configuration and schema versions
+│   ├── Preferences/              # UserDefaults bindings
+│   └── Repositories/             # Data access layers (Contacts, SMS threads)
+├── Models/                       # Domain data representations
+└── Utilities/                    # Helpers, extensions, unified logging
+```
 
 ---
 
-## 🛡️ Known Challenges & Solutions
+## Features
 
-### 1. macOS SCO Audio Blocking
-> [!CRITICAL]
-> macOS blocks userland apps from accessing Bluetooth SCO channels directly.
-*   **Solution:** Bypass SCO entirely. DialWave captures audio directly on the Android device via `AudioRecord` and routes it to the Mac over a local WiFi UDP socket, injecting microphone data back into the call path via `AudioTrack`.
-
-### 2. Android Silent Call Answering Restrictions
-> [!WARNING]
-> Android prevents apps from answering calls silently without elevated permissions.
-*   **Solution:** Explicitly request the standard `ANSWER_PHONE_CALLS` permission in the manifest, fallback to an Accessibility Service if required on specific devices (e.g. Samsung).
-
-### 3. Bluetooth RFCOMM Reliability on macOS
-> [!NOTE]
-> The macOS Bluetooth stack is famously unstable for long-running RFCOMM connections.
-*   **Solution:** Use Bluetooth RFCOMM solely for initial handshake and discovery. Once connected, upgrade the link to a high-speed WiFi TCP/UDP socket for all payloads and audio streams.
+- **Zero-Dock Menubar Daemon:** Sits cleanly in the status bar with connection state indicators (Connected, Handshake, Disconnected).
+- **WiFi Audio Link:** Direct microphone and speaker routing using UDP, maintaining clear call quality and avoiding macOS SCO blocks.
+- **Programmable Call Control:** Full answer, reject, and dial capabilities triggered directly from HUD popup notifications.
+- **Local SQLite Storage:** Instant contact lookup and call logs stored locally inside the Application Support folder.
+- **SMS Thread Popovers:** Read conversation blocks and write replies directly from the menu bar drop-down.
+- **Notification Mirroring:** Relays specific app notifications from your Android device to macOS notifications natively.
 
 ---
 
-*DialWave Project — Initialized June 2026*
+## Technical Stack
+
+### macOS Stack
+
+| Module            | Technology                            |
+| :---------------- | :------------------------------------ |
+| **GUI Framework** | SwiftUI + AppKit                      |
+| **Peripherals**   | CoreBluetooth (RFCOMM / L2CAP client) |
+| **Audio Routing** | AVFoundation / AudioToolbox           |
+| **Local Storage** | SQLite.swift / CoreData               |
+| **Networking**    | Network.framework (TCP / UDP)         |
+
+### Android Stack
+
+| Module              | Technology                                            |
+| :------------------ | :---------------------------------------------------- |
+| **Language**        | Kotlin                                                |
+| **Audio Interface** | AudioRecord + AudioTrack (Low-latency stream capture) |
+| **Bluetooth API**   | Android Bluetooth API (RFCOMM socket server)          |
+| **System Hooks**    | TelecomManager, BroadcastReceiver, ContentResolver    |
+| **UI Framework**    | Jetpack Compose (Config / logging dashboard)          |
+
+---
+
+MIT License. Developed by [Rishi Shah](https://github.com/rishis26).

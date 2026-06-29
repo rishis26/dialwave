@@ -5,24 +5,27 @@ DialWave is a native companion application suite for macOS and Android, prioriti
 ---
 
 ## 👁️ Vision
+
 DialWave turns the Mac into an extension of an Android phone by establishing a secure local channel over Bluetooth (with Wi-Fi fallback), requiring **no cloud dependency** or internet connection.
 
 ### Core Capabilities
-*   **Incoming Call HUD:** Displays real-time incoming call overlays on macOS.
-*   **Call Control:** Direct options to answer, reject, or terminate active phone calls.
-*   **Dialer Integration:** Initiate outgoing calls on the phone from macOS.
-*   **Contact Directory:** Browse and search synchronized Android contacts.
-*   **Call Log Browser:** View complete phone logs (incoming, outgoing, missed) with click-to-callback.
-*   **SMS Client:** Receive text notifications, browse threads, and reply from the desktop.
-*   **Notification Mirroring:** Mirror selected notifications from Android to the Mac notification center.
+
+- **Incoming Call HUD:** Displays real-time incoming call overlays on macOS.
+- **Call Control:** Direct options to answer, reject, or terminate active phone calls.
+- **Dialer Integration:** Initiate outgoing calls on the phone from macOS.
+- **Contact Directory:** Browse and search synchronized Android contacts.
+- **Call Log Browser:** View complete phone logs (incoming, outgoing, missed) with click-to-callback.
+- **SMS Client:** Receive text notifications, browse threads, and reply from the desktop.
+- **Notification Mirroring:** Mirror selected notifications from Android to the Mac notification center.
 
 ---
 
 ## 🎨 Design Principles
-*   **Native First:** Built purely on SwiftUI, AppKit (where required), AVFoundation, and CoreBluetooth. **Never** Electron, React Native, or Flutter.
-*   **Offline First:** All operations run locally; internet connectivity is never requested or required.
-*   **Bluetooth-First:** Primary transport is established via RFCOMM, using Wi-Fi socket upgrades as high-throughput fallbacks.
-*   **Modular Architecture:** Strict single-responsibility principle for modules to prevent God classes and bloated source files.
+
+- **Native First:** Built purely on SwiftUI, AppKit (where required), AVFoundation, and CoreBluetooth. **Never** Electron, React Native, or Flutter.
+- **Offline First:** All operations run locally; internet connectivity is never requested or required.
+- **Bluetooth-First:** Primary transport is established via RFCOMM, using Wi-Fi socket upgrades as high-throughput fallbacks.
+- **Modular Architecture:** Strict single-responsibility principle for modules to prevent God classes and bloated source files.
 
 ---
 
@@ -96,7 +99,7 @@ flowchart TD
     Services -->|Invokes commands| BT[Bluetooth / Socket Layer]
     BT -->|Encodes/Decodes| Protocol[Protocol Serialization]
     Protocol -->|Transmits over Air| Android[Android Companion App]
-    
+
     style UI fill:#2c3e50,stroke:#34495e,color:#fff
     style Services fill:#16a085,stroke:#1abc9c,color:#fff
     style BT fill:#2980b9,stroke:#3498db,color:#fff
@@ -109,44 +112,44 @@ flowchart TD
 
 ### Core Modules Detail
 
-1.  **UI:** Responsible purely for rendering views. It consumes state from Services and calls Service methods to handle interactions.
-2.  **Bluetooth / Connection:** Manages discovery, pairing, socket lifecycles (RFCOMM / TCP), reconnect loops, and raw stream output.
-3.  **Protocol:** Acts as the shared contract. Encapsulates all models in JSON serialization.
-    *   *Example Incoming Call Payload:*
-        ```json
-        {
-          "type": "incoming_call",
-          "number": "+919876543210",
-          "contact": "Mom"
-        }
-        ```
-4.  **Services:** Handles application business logic (e.g., orchestrating active calls, queueing unsent SMS, caching profiles).
-5.  **Storage:** Local persistence layer for SQLite data, cached contacts, messaging history, and client configuration.
+1. **UI:** Responsible purely for rendering views. It consumes state from Services and calls Service methods to handle interactions.
+2. **Bluetooth / Connection:** Manages discovery, pairing, socket lifecycles (RFCOMM / TCP), reconnect loops, and raw stream output.
+3. **Protocol:** Acts as the shared contract. Encapsulates all models in JSON serialization.
+   - _Example Incoming Call Payload:_
+     ```json
+     {
+       "type": "incoming_call",
+       "number": "+919876543210",
+       "contact": "Mom"
+     }
+     ```
+4. **Services:** Handles application business logic (e.g., orchestrating active calls, queueing unsent SMS, caching profiles).
+5. **Storage:** Local persistence layer for SQLite data, cached contacts, messaging history, and client configuration.
 
 ---
 
 ## 🚀 Development Roadmap
 
-| Phase | Module | Objective | Details |
-| :--- | :--- | :--- | :--- |
-| **Phase 1** | **Foundation** | macOS Skeleton | Menu bar daemon setup, status icon representation, initial settings panel. |
-| **Phase 2** | **Bluetooth** | Discovery & Pairing | Implement scan, pair, connect, and basic RFCOMM ping/pong. |
-| **Phase 3** | **Protocol** | Negotiation | JSON payload schema parser, heartbeats, version compatibility checks. |
-| **Phase 4** | **Call Control** | Voice Triggers | Incoming call popups, Answer / Reject hooks, Dial from macOS. |
-| **Phase 5** | **Contacts** | Synchronization | Bulk ContactContract parsing, local sqlite storage, UI contact browser. |
-| **Phase 6** | **SMS** | Conversation UI | Text notification mirrors, conversation threading, reply composer. |
-| **Phase 7** | **Call History** | Logging | Sync log arrays (missed, dial, answered) to local history DB. |
-| **Phase 8** | **Notifications**| Push Mirroring | Intercept Android notification center, display via macOS user notification. |
-| **Phase 9** | **Production** | Stability | Auto-reconnect handling, Launch at Login helper, release validation. |
+| Phase       | Module            | Objective           | Details                                                                     |
+| :---------- | :---------------- | :------------------ | :-------------------------------------------------------------------------- |
+| **Phase 1** | **Foundation**    | macOS Skeleton      | Menu bar daemon setup, status icon representation, initial settings panel.  |
+| **Phase 2** | **Bluetooth**     | Discovery & Pairing | Implement scan, pair, connect, and basic RFCOMM ping/pong.                  |
+| **Phase 3** | **Protocol**      | Negotiation         | JSON payload schema parser, heartbeats, version compatibility checks.       |
+| **Phase 4** | **Call Control**  | Voice Triggers      | Incoming call popups, Answer / Reject hooks, Dial from macOS.               |
+| **Phase 5** | **Contacts**      | Synchronization     | Bulk ContactContract parsing, local sqlite storage, UI contact browser.     |
+| **Phase 6** | **SMS**           | Conversation UI     | Text notification mirrors, conversation threading, reply composer.          |
+| **Phase 7** | **Call History**  | Logging             | Sync log arrays (missed, dial, answered) to local history DB.               |
+| **Phase 8** | **Notifications** | Push Mirroring      | Intercept Android notification center, display via macOS user notification. |
+| **Phase 9** | **Production**    | Stability           | Auto-reconnect handling, Launch at Login helper, release validation.        |
 
 ---
 
 ## 📏 Coding Standards & Architecture Rules
 
-*   **File Limits:** No single source code file should exceed **300 lines of code**. Keep modules small.
-*   **Function Limits:** Maximum function size is **40 lines of code**. Break down large functions into helper methods.
-*   **Service Design:** Every service class must implement a single responsibility.
-*   **Typed Protocols:** Avoid ad-hoc string parsing or manual dictionary lookup for incoming sockets. Every message type must map to a Swift Codable type in the `Protocol` module.
+- **File Limits:** No single source code file should exceed **300 lines of code**. Keep modules small.
+- **Function Limits:** Maximum function size is **40 lines of code**. Break down large functions into helper methods.
+- **Service Design:** Every service class must implement a single responsibility.
+- **Typed Protocols:** Avoid ad-hoc string parsing or manual dictionary lookup for incoming sockets. Every message type must map to a Swift Codable type in the `Protocol` module.
 
 ---
 
@@ -169,4 +172,5 @@ flowchart TD
 ---
 
 ## 🎯 Long-Term Goal
+
 Create the premier open-source macOS ⇄ Android bridging solution. It must remain **highly native**, **performant**, **private (offline)**, **beautiful**, and **developer-friendly**.
