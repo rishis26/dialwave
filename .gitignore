@@ -231,7 +231,3 @@ logs/
 *.temp
 tmp/
 temp/
-
-
-# Documentation
-docs/
